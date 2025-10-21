@@ -579,88 +579,23 @@ func displayDashboard() {
 	progressLine := fmt.Sprintf("PROGRESS: %s%s%s   %.1f%%", Yellow, progressBar, Reset, progressPercent)
 	fmt.Printf("%s\n\n", centerText(progressLine, 80))
 
-	// CPM
-	cpm := atomic.LoadInt64(&Cpm) * 60
-	cpmLine := fmt.Sprintf("CPM: %d!S", cpm)
+	// CPM - capture and reset for accurate reading
+	capturedCpm := atomic.LoadInt64(&Cpm)
+	atomic.StoreInt64(&Cpm, 0) // Reset CPM after capture
+	cpmDisplay := capturedCpm * 60
+	cpmLine := fmt.Sprintf("CPM: %d", cpmDisplay)
 	fmt.Printf("%s%s%s%s\n\n", Blue, centerText(cpmLine, 80), Reset)
 
-	// Hit category counts (same as result files)
-	skin0Count := 0
-	skin1to9Count := 0
-	skin10plusCount := 0
-	skin50plusCount := 0
-	skin100plusCount := 0
-	skin300plusCount := 0
-	exclusivesCount := 0
-	headlessCount := 0
-	faCount := 0
-
-	// Try to read from results files to get exact counts
-	files, err := ioutil.ReadDir("Results")
-	if err == nil && len(files) > 0 {
-		// Get the latest results folder
-		latestFolder := files[len(files)-1].Name()
-
-		// Count lines in each result file (each line = 1 account)
-		hitFiles := []string{
-			"0_skins.txt",
-			"1-9_skins.txt",
-			"10+_skins.txt",
-			"50+_skins.txt",
-			"100+_skins.txt",
-			"300+_skins.txt",
-			"exclusives.txt",
-			"headless.txt",
-			"fa.txt",
-		}
-
-		for _, fileName := range hitFiles {
-			filePath := filepath.Join("Results", latestFolder, fileName)
-			if content, err := ioutil.ReadFile(filePath); err == nil {
-				lines := strings.Split(string(content), "\n")
-				count := 0
-				for _, line := range lines {
-					line = strings.TrimSpace(line)
-					if line != "" {
-						count++
-					}
-				}
-
-				switch fileName {
-				case "0_skins.txt":
-					skin0Count = count
-				case "1-9_skins.txt":
-					skin1to9Count = count
-				case "10+_skins.txt":
-					skin10plusCount = count
-				case "50+_skins.txt":
-					skin50plusCount = count
-				case "100+_skins.txt":
-					skin100plusCount = count
-				case "300+_skins.txt":
-					skin300plusCount = count
-				case "exclusives.txt":
-					exclusivesCount = count
-				case "headless.txt":
-					headlessCount = count
-				case "fa.txt":
-					faCount = count
-				}
-			}
-		}
-	} else {
-		// Fallback estimation
-		totalHits := int(Hits)
-		skin10plusCount = int(float64(totalHits) * 0.6)
-		skin50plusCount = int(float64(totalHits) * 0.3)
-		skin100plusCount = int(float64(totalHits) * 0.1)
-		skin0Count = int(float64(totalHits) * 0.1)
-		skin1to9Count = int(float64(totalHits) * 0.1)
-		skin300plusCount = int(float64(totalHits) * 0.05)
-		exclusivesCount = int(float64(totalHits) * 0.05)
-		headlessCount = int(float64(totalHits) * 0.05)
-		faCount = int(float64(totalHits) * 0.4)
-	}
+	// Hit category counts from global counter variables (real-time accuracy)
+	skin0Count := int(ZeroSkin)
+	skin1to9Count := int(OnePlus)
+	skin10plusCount := int(TenPlus)
+	skin50plusCount := int(FiftyPlus)
+	skin100plusCount := int(HundredPlus)
+	skin300plusCount := int(ThreeHundredPlus)
+	exclusivesCount := int(Rares)
+	headlessCount := int(Headless)
+	faCount := int(Sfa)
 
 	// Color-code the counts based on value (red for 0, yellow for 1-10, green for 10+)
 	getCountColor := func(count int) (string, string) {
@@ -984,7 +919,7 @@ func UpdateTitle(wg *sync.WaitGroup) {
 		// Reset CPM every second for accurate reading
 		atomic.StoreInt64(&Cpm, 0)
 
-		title := fmt.Sprintf("OmesFN | Checked: %d/%d | Hits: %d | 2fa: %d | Epic 2fa: %d | CPM: %d!S | Time: %dm %ds",
+		title := fmt.Sprintf("OmesFN | Checked: %d/%d | Hits: %d | 2fa: %d | Epic 2fa: %d | CPM: %d | Time: %dm %ds",
 			Check, len(Ccombos), Hits, Twofa, EpicTwofa, cpm*60, minutes, seconds)
 
 		setConsoleTitle(title)
