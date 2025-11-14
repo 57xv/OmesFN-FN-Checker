@@ -6,11 +6,11 @@ import (
 )
 
 const (
-	ColorGreen  = "\033[32m"
-	ColorYellow = "\033[33m"
-	ColorRed    = "\033[31m"
-	ColorCyan   = "\033[36m"
-	ColorReset  = "\033[0m"
+	ColorGreen  = ""
+	ColorYellow = ""
+	ColorRed    = ""
+	ColorCyan   = ""
+	ColorReset  = ""
 )
 
 var printLock sync.Mutex

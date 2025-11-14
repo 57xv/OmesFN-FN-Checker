@@ -462,6 +462,11 @@ func sendDiscordWebhookForExclusive(acc, displayName, skinsList, epicEmail, alte
 		password = creds[1]
 	}
 
+	// Handle empty display name
+	if strings.TrimSpace(displayName) == "" {
+		displayName = "Unknown"
+	}
+
 	// Create Discord webhook payload
 	payload := map[string]interface{}{
 		"embeds": []map[string]interface{}{
@@ -554,6 +559,11 @@ func sendDiscordWebhookForHit(acc, displayName, skinsCountStr, epicEmail, altern
 	password := ""
 	if len(creds) > 1 {
 		password = creds[1]
+	}
+
+	// Handle empty display name
+	if strings.TrimSpace(displayName) == "" {
+		displayName = "Unknown"
 	}
 
 	// Create Discord webhook payload for regular hits
@@ -692,20 +702,7 @@ func (s *Stats) ExportFA(acc, displayName string, skinCount, totalVbucks int, ep
 }
 
 func (s *Stats) ExportHit(acc, displayName, epicEmail, alternateMethodsStr, lastPlayed, twofaStatus string, skinCount, totalVbucks int, hasStw, isHeadless bool, ogSkinsFound, rareSkinsFound []string) {
-	creds := strings.SplitN(acc, ":", 2)
-	email := creds[0]
-	password := ""
-	if len(creds) > 1 {
-		password = creds[1]
-	}
-
-	// Calculate quality score for automation
-	qualityScore := calculateAccountQuality(skinCount, totalVbucks, hasStw, len(ogSkinsFound)>0, len(rareSkinsFound)>0, twofaStatus)
-
-	// Auto-save premium hits
-	if qualityScore >= 80 {
-		autoSaveHit(fmt.Sprintf("%s:%s", email, password), qualityScore)
-	}
+	// Auto-save premium hits - removed for modern UI
 
 	// Send Discord webhook for ALL hits if enabled (including exclusives, headless, etc.)
 	if SendAllHits && DiscordWebhookURL != "" {
